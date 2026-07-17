@@ -36,7 +36,7 @@ pub mod test {
     use crate::prelude::*;
     use serde::{Deserialize, Serialize};
 
-    use std::{fmt::Debug, str::FromStr};
+    use std::{fmt::Debug, str::FromStr, sync::Arc};
 
     #[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq)]
     pub enum Verdict {
@@ -80,7 +80,7 @@ pub mod test {
     impl FromStr for Verdict {
         type Err = Error;
 
-        fn from_str(s: &str) -> Result<Self, Self::Err> {
+        fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
             Ok(match s {
                 "OK" => Self::Ok,
                 "WA" => Self::Wa,
@@ -95,6 +95,30 @@ pub mod test {
                     bail!("incorrect verdict {}", verdict.bold())
                 }
             })
+        }
+    }
+
+    use crate::logger::short_str;
+
+    #[derive(Clone)]
+    pub struct Result {
+        pub verdict: Verdict,
+        pub time: f64,
+        pub memory: u64,
+
+        pub output: Arc<str>,
+        pub message: Arc<str>,
+    }
+
+    impl Debug for Result {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.debug_struct("Result")
+                .field("verdict", &self.verdict)
+                .field("time", &self.time)
+                .field("memory", &self.memory)
+                .field("output", &short_str(&self.output))
+                .field("message", &short_str(&self.message))
+                .finish()
         }
     }
 }
