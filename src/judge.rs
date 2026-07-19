@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::prelude::*;
 
 use serde::{Deserialize, Serialize};
@@ -22,13 +24,16 @@ impl TryFrom<&str> for Lang {
     }
 }
 
-impl ToString for Lang {
-    fn to_string(&self) -> String {
-        match self {
-            Self::Gpp => "g++",
-            Self::Python => "python3",
-        }
-        .to_string()
+impl Display for Lang {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Gpp => "g++",
+                Self::Python => "python3",
+            }
+        )
     }
 }
 

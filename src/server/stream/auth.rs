@@ -41,6 +41,23 @@ impl super::Income for ManagerToInvoker {
     }
 }
 
+impl super::Outgo for ManagerToInvoker {
+    fn into_raw(self) -> RawMessage {
+        match self {
+            Self::Challenge(data) => {
+                let mut body = RawMessage::new("CHALLENGE");
+                body.set_data(Box::from(&*data));
+                body
+            }
+            ManagerToInvoker::Verdict(is_approved) => {
+                let mut body = RawMessage::new("VERDICT");
+                body.add_field(&"VERDICT", &if is_approved { "APPROVED" } else { "DENIED" });
+                body
+            }
+        }
+    }
+}
+
 pub enum InvokerToManager {
     ChallengeSolution(Solution),
 }
@@ -55,7 +72,20 @@ impl std::fmt::Debug for InvokerToManager {
         }
     }
 }
-
+impl super::Income for InvokerToManager {
+    fn from_raw(msg: MappedRawMessage) -> Result<Self> {
+        Ok(match msg.ty() {
+            "PROOF" => Self::ChallengeSolution(
+                msg.data()
+                    .ok_or(anyhow!("{} not found", "data".bold()))?
+                    .into(),
+            ),
+            command => {
+                bail!("incorrect command '{}'", command.bold());
+            }
+        })
+    }
+}
 impl super::Outgo for InvokerToManager {
     fn into_raw(self) -> RawMessage {
         match self {
