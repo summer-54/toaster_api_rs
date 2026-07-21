@@ -45,6 +45,7 @@ impl<'a> VerificationHelper for Helper<'a> {
     }
 }
 
+#[derive(Clone)]
 pub struct Challenge(Box<[u8]>);
 pub struct Solution(Box<[u8]>);
 
