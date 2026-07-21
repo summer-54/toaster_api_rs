@@ -31,17 +31,12 @@ pub struct Stream {
 }
 
 impl<I: Income, O: Outgo + Send> stream::Stream<I, O> for Stream {
-    async fn recv(&self) -> Result<I> {
-        I::from_raw(
-            self.receiver
-                .lock()
-                .await
-                .recv()
-                .await
-                .ok_or(anyhow!("receiver was closed"))?
-                .into_mapped(),
-        )
+    async fn recv(&self) -> Option<Result<I>> {
+        Some(I::from_raw(
+            self.receiver.lock().await.recv().await?.into_mapped(),
+        ))
     }
+
     async fn send(&self, msg: O) -> Result<()> {
         Arc::clone(&self.channel)
             .send(self.name.clone(), msg.into_raw())
