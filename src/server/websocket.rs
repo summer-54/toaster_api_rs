@@ -51,7 +51,17 @@ pub struct Channel {
 }
 
 impl Channel {
-    pub async fn new<A: ToSocketAddrs>(socket_addr: A, uri: Uri) -> Result<Channel> {
+    pub fn new(
+        write: Sender<TcpStream, DeflateEncoder>,
+        read: Receiver<TcpStream, DeflateDecoder>,
+    ) -> Self {
+        Self {
+            streams: Mutex::new(HashMap::new()),
+            read: Mutex::new(read),
+            write: Mutex::new(write),
+        }
+    }
+    pub async fn bind<A: ToSocketAddrs>(socket_addr: A, uri: Uri) -> Result<Channel> {
         log::trace!("websocket start subscribing");
         let tcp_stream = TcpStream::connect(socket_addr)
             .await
@@ -77,11 +87,7 @@ impl Channel {
         log::info!("websocket subprotocol: {subprotocol:?}");
 
         let (write, read) = websocket.split()?;
-        Ok(Self {
-            streams: Mutex::new(HashMap::new()),
-            write: Mutex::new(write),
-            read: Mutex::new(read),
-        })
+        Ok(Self::new(write, read))
     }
 
     pub async fn new_stream(self: &Arc<Self>, name: &str) -> Stream {
