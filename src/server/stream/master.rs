@@ -68,7 +68,9 @@ impl super::Income for InvokerToManager {
                 token: msg
                     .field("ID")
                     .ok_or(anyhow!("{} not found", "ID".bold()))?
-                    .parse::<Uuid>()?,
+                    .parse::<Uuid>()
+                    .context("parsing 'ID' field")?,
+
                 name: msg
                     .field("NAME")
                     .ok_or(anyhow!("{} field not found", "NAME".bold()))?
